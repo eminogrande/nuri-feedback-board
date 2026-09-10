@@ -35,7 +35,8 @@ export default async function BoardPage({ searchParams }: {
       <p className="mt-5 rounded-xl border border-violet-100 bg-violet-50 px-4 py-3 text-sm leading-relaxed text-violet-950">Sample board · These are example ideas, not product commitments. Preview votes are not saved.</p>
 
       <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_16rem]">
-        <section aria-label="Feedback items" className="min-w-0">
+        <section aria-labelledby="feedback-items-heading" className="min-w-0">
+          <h2 id="feedback-items-heading" className="sr-only">Community feedback</h2>
           <nav aria-label="Feedback categories" className="flex flex-wrap gap-2">
             {[{ value: "", label: "All feedback" }, ...Object.entries(categories).map(([value, { label }]) => ({ value, label }))].map(({ value, label }) => {
               const active = value === (category ?? "");
@@ -60,7 +61,7 @@ export default async function BoardPage({ searchParams }: {
             {filtered.length === 0 && <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center"><h2 className="text-xl font-semibold">No matching ideas</h2><p className="mt-3 leading-relaxed text-slate-600">Try a different search, or start a new conversation.</p><Link href="/board" className={cn(buttonVariants({ variant: "outline" }), "mt-5")}>Clear filters</Link></div>}
           </div>
         </section>
-        <aside className="sticky bottom-4 z-10 rounded-2xl border border-border bg-white p-4 shadow-sm lg:top-6 lg:bottom-auto lg:p-6">
+        <aside className="sticky top-4 z-10 order-first rounded-2xl border border-border bg-white p-4 shadow-sm lg:order-last lg:top-6 lg:p-6">
           <h2 className="hidden text-lg font-semibold lg:block">Your perspective matters</h2>
           <p className="mb-5 mt-3 hidden leading-relaxed text-slate-600 lg:block">Missing something? Share an idea, report a bug, or suggest a better way.</p>
           <Link href={category ? `/feedback?category=${category}` : "/feedback"} className={cn(buttonVariants(), "w-full")}><Plus aria-hidden="true" className="size-5" />Give feedback</Link>

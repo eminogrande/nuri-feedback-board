@@ -29,7 +29,9 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  return { title: getItem((await params).id).title };
+  const { id } = await params;
+  // Let the page render its 404 boundary rather than throwing from metadata.
+  return { title: Object.hasOwn(items, id) ? items[id].title : "Feedback not found" };
 }
 
 export default async function FeedbackDetailPage({ params }: Props) {
