@@ -1,0 +1,87 @@
+name: payout
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Accepted issue number in GITHUB_REPO
+        required: true
+        type: string
+      issue_body:
+        description: Exact current issue body (checked against GitHub, never used as an override)
+        required: true
+        type: string
+      project_item_id:
+        description: Project item node ID belonging to the issue
+        required: true
+        type: string
+  schedule:
+    - cron: '*/5 * * * *'
+
+permissions:
+  contents: read
+
+# ponytail: one wallet, one global lock; use per-wallet locks if wallets multiply.
+concurrency:
+  group: arkade-payout
+  cancel-in-progress: false
+
+jobs:
+  payout:
+    # Explicit opt-in; code also refuses mainnet. Configure a testnet wallet first.
+    if: github.ref == 'refs/heads/main' && vars.PAYOUT_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: payout-testnet
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check types and offline payout regressions
+        run: |
+          pnpm exec tsc --noEmit -p tsconfig.json
+          pnpm exec tsx scripts/payout.ts --self-test
+      - name: Resolve target repository
+        id: repository
+        env:
+          TARGET_REPO: ${{ secrets.GITHUB_REPO }}
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const repo = process.env.TARGET_REPO;
+          if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo || '')) {
+            throw new Error('GITHUB_REPO must be owner/repo');
+          }
+          const [owner, name] = repo.split('/');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `owner=${owner}\nname=${name}\n`);
+          NODE
+      - name: Create GitHub App installation token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GITHUB_APP_ID }}
+          private-key: ${{ secrets.GITHUB_PRIVATE_KEY }}
+          owner: ${{ steps.repository.outputs.owner }}
+          repositories: ${{ steps.repository.outputs.name }}
+      - name: Pay accepted feedback
+        run: npx --no-install tsx scripts/payout.ts
+        env:
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+          ISSUE_BODY: ${{ inputs.issue_body }}
+          PROJECT_ITEM_ID: ${{ inputs.project_item_id }}
+          ARKADE_MNEMONIC: ${{ secrets.ARKADE_MNEMONIC }}
+          ARKADE_SERVER_URL: ${{ secrets.ARKADE_SERVER_URL }}
+          GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GITHUB_PROJECT_ID: ${{ secrets.GITHUB_PROJECT_ID }}
+          GITHUB_REPO: ${{ secrets.GITHUB_REPO }}
