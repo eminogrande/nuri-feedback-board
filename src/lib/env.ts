@@ -8,6 +8,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_GITHUB_REPO: z.string().min(1),
   NEXT_PUBLIC_GITHUB_PROJECT_URL: z.string().url(),
   NURI_PASSKEY_ORIGIN: z.string().url(),
+  AUTH_SECRET: z.string().min(32),
   ARKADE_MNEMONIC: z.string().min(1),
   ARKADE_SERVER_URL: z.string().url(),
 });
