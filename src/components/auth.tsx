@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type FormEvent } from "react";
+import { createContext, useContext, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FeedbackRequestError, readFeedbackResponse } from "@/lib/client-data";
 
 const authChanged = "nuri-auth-change";
 const buttonClass = "rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50";
@@ -104,37 +107,75 @@ export function PasskeySignInButton({ onSuccess }: { onSuccess?: (username: stri
   );
 }
 
-export function UserMenu() {
+type AuthState = { username: string | null; loading: boolean; error: string; refresh: () => void };
+const AuthContext = createContext<AuthState | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const controller = new AbortController();
+    let controller: AbortController;
     async function refresh() {
+      controller?.abort();
+      const current = new AbortController();
+      controller = current;
+      // Fail closed while rechecking, including after a logout or expired POST.
+      setLoading(true);
+      setUsername(null);
+      setError("");
       try {
-        const response = await fetch("/api/me", { credentials: "same-origin", cache: "no-store", signal: controller.signal });
-        if (response.status === 401) { setUsername(null); setError(""); return; }
+        const response = await fetch("/api/me", { credentials: "same-origin", cache: "no-store", signal: current.signal });
+        if (response.status === 401) return;
         const body = await readResponse(response);
-        setUsername(body.username);
-        setError("");
+        if (typeof body.username !== "string" || !body.username) throw new Error("Invalid session.");
+        if (!current.signal.aborted) setUsername(body.username);
       } catch {
-        if (!controller.signal.aborted) setError("Could not load your session. Please refresh.");
-      } finally { if (!controller.signal.aborted) setLoading(false); }
+        if (!current.signal.aborted) setError("Could not load your session. Please try again.");
+      } finally { if (!current.signal.aborted) setLoading(false); }
     }
     void refresh();
     window.addEventListener(authChanged, refresh);
-    return () => { controller.abort(); window.removeEventListener(authChanged, refresh); };
+    return () => {
+      controller?.abort();
+      window.removeEventListener(authChanged, refresh);
+    };
   }, []);
 
+  return <AuthContext.Provider value={{ username, loading, error, refresh: () => window.dispatchEvent(new Event(authChanged)) }}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const state = useContext(AuthContext);
+  if (!state) throw new Error("AuthProvider is required.");
+  return state;
+}
+
+export function HeaderAuth() {
+  const { username, loading, error } = useAuth();
+  return (
+    <div className="min-w-0 text-sm" aria-live="polite">
+      {loading ? <span>Checking session…</span> : <Link href="/login" className="inline-block min-h-12 max-w-full break-words rounded-lg px-2 py-3 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-700">
+        {username ? `Signed in as ${username}` : "Sign in"}
+      </Link>}
+      {error && <p role="alert" className="text-red-700">Session unavailable. Open Sign in to retry.</p>}
+    </div>
+  );
+}
+
+export function UserMenu() {
+  const { username, loading, error: sessionError, refresh } = useAuth();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+
   async function logout() {
+    if (pending) return;
     setPending(true);
     setError("");
     try {
       await readResponse(await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }));
-      setUsername(null);
-      window.dispatchEvent(new Event(authChanged));
+      refresh();
     } catch (error) { setError(error instanceof Error ? error.message : "Sign-out failed. Please try again."); }
     finally { setPending(false); }
   }
@@ -148,6 +189,36 @@ export function UserMenu() {
           <Link href="/feedback" className="text-sm underline underline-offset-4">Give feedback</Link>
         </div>
       ) : <p className="text-sm text-muted">You are not signed in.</p>}
+      {(error || sessionError) && <p role="alert" className="text-sm text-red-700">{error || sessionError}</p>}
+      {sessionError && <Button variant="outline" onClick={refresh}>Retry session</Button>}
+    </div>
+  );
+}
+
+export function FeedbackVote({ id, count, title, onVoted }: { id: string; count: number; title: string; onVoted: () => void }) {
+  const { username, loading, error: sessionError, refresh } = useAuth();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+
+  async function vote() {
+    if (!username || loading || sessionError || pending) return;
+    setPending(true);
+    setError("");
+    try {
+      await readFeedbackResponse(await fetch(`/api/feedback/${id}/vote`, { method: "POST", credentials: "same-origin", cache: "no-store" }));
+      onVoted();
+    } catch (error) {
+      if (error instanceof FeedbackRequestError && error.status === 401) refresh();
+      setError(error instanceof Error ? error.message : "Could not record your vote. Please try again.");
+    } finally { setPending(false); }
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-slate-600">{count} {count === 1 ? "vote" : "votes"}. Counts reflect GitHub App reactions, not one vote per person.</p>
+      {loading ? <p role="status">Checking your session…</p> : sessionError ? <><p role="alert">{sessionError}</p><Button variant="outline" onClick={refresh}>Retry session</Button></> : username ? (
+        <Button variant="outline" onClick={vote} disabled={pending} aria-label={`Upvote ${title}`}><ChevronUp aria-hidden="true" className="size-5" />{pending ? "Saving vote…" : "Upvote"}</Button>
+      ) : <><p>Sign in to vote.</p><PasskeySignInButton /></>}
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
     </div>
   );
