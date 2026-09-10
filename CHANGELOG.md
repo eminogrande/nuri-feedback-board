@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed
+- Connected the public board, roadmap, and detail pages to uncached feedback API reads, with loading, error, empty, and missing-item states. All seven GitHub project statuses retain their original names.
+- Connected the submission form to authenticated issue creation, preserving drafts on errors, navigating to the returned issue number, and preventing duplicate submissions after a partial project-sync failure.
+- Added a shared `/api/me` session state for the header, sign-in, submission, and detail-page voting. Votes are persisted through the API and reloaded; board and roadmap vote links open the detail page rather than simulating local votes.
+- Kept the existing server data layer, API routes, and preview-only composite components unchanged. Live pages reuse the existing UI primitives because the preview composites assume unsupported statuses, fabricated comment counts, and local-only voting.
+- Integration limitations remain: the API requires a display-only `author` field, GitHub App reactions are not per-person voting, and real Nuri sign-in needs an operator-provisioned trusted passkey registry. Production GitHub issue creation has not been exercised by this UI change. Auth and feedback service configuration is required before live use. Implemented by Athos for task packet 06.
+
 ### Added
 - Bootstrap Next.js 15 project with App Router, TypeScript, Tailwind CSS, and shadcn/ui.
 - Design tokens matching Nuri's clean public-web style (light mode only).
