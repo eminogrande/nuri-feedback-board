@@ -3,6 +3,10 @@
 ## Unreleased
 
 ### Added
+- Public feedback preview by Athos: landing categories and three-step guide, searchable/filterable board, four-column roadmap, category-aware submission form, and linked feedback details.
+- Reusable feedback cards, category/status badges, preview vote buttons, roadmap columns, and local shadcn-style UI primitives using existing dependencies.
+- Mobile-first navigation, 17px base typography, keyboard focus states, and explicit sample-data/sign-in notices; submissions and votes are not persisted in this UI-only packet.
+- Runnable HTTP smoke tests and optional Chromium/axe checks cover sample links, filters, input validation, votes, unknown IDs, accessibility, and mobile overflow.
 - Bootstrap Next.js 15 project with App Router, TypeScript, Tailwind CSS, and shadcn/ui
 - Design tokens matching Nuri's clean public-web style (light mode only)
 - Root layout with header (logo, Roadmap, Give Feedback nav) and footer
