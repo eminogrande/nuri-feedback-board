@@ -1,47 +1,50 @@
 # Task Packet 03 — GitHub Issues/Projects API integration
 
 - Repo: `eminogrande/nuri-feedback-board` (local: `~/Developer/nuri-feedback-board`)
-- Base branch: `main` (will merge on top of packet-01 branch)
+- Base branch: `main`   Base SHA: `b848ec2`
 - Target branch: `hermes-subagent/github-api`
-- Allowed paths: `src/lib/github.ts`, `src/lib/types.ts`, `src/app/api/**/*`, `src/app/board/**/*`, `src/app/roadmap/**/*`, `src/app/feedback/**/*`, `CHANGELOG.md`
-- Protected: `package.json` version, CI workflow, docs
-- Verify: `pnpm install && pnpm run build && pnpm run check`
-- Done when: `/board` and `/roadmap` display real issues from the configured GitHub repo/project; submitting the form creates a real issue.
-- Out of scope: Payout action, passkey auth, internal/public filtering.
+- Allowed paths: `src/lib/types.ts`, `src/lib/github.ts`, `src/lib/data.ts`, `src/app/api/**/*`, `CHANGELOG.md`
+- Protected: `package.json` version, `docs/**/*.md`, `src/lib/env.ts`, CI workflow, `.github/workflows/*`, `src/app/**/*`, `src/components/**/*` (except `src/lib/data.ts`)
+- Verify: `pnpm install && pnpm run build && npx tsc --noEmit -p tsconfig.json`
+- Done when: The API routes work and `src/lib/data.ts` returns real issues from GitHub.
+- Out of scope: UI pages (handled by packet 02), auth, payout.
 - Forbidden: merge, deploy, tag, force-push, mainnet/funds, docker, secrets.
 
 ## What to build
 
 1. **`src/lib/types.ts`** — define TypeScript types:
    - `FeedbackItem { id, number, title, body, category, status, votes, createdAt, author }`
-   - `RoadmapColumn { id, name, items: FeedbackItem[] }`
    - `Category = 'feature' | 'bug' | 'improvement'`
    - `Status = 'New' | 'Under Review' | 'Planned' | 'In Progress' | 'Accepted' | 'Paid' | 'Dismissed'`
+   - `CreateFeedbackInput { title, description, category, author }`
 
-2. **`src/lib/github.ts`** — GitHub App authentication via `@octokit/app` or `@octokit/auth-app`, plus helpers:
-   - `getIssues()` — fetch open issues from `GITHUB_REPO`, parse labels into `category` and `status`.
-   - `getProjectItems()` — fetch project items via GraphQL (`GITHUB_PROJECT_ID`), map to statuses.
-   - `createIssue({ title, body, category })` — create issue with labels `feedback`, `category`, add it to the configured project under `New`.
-   - `addComment(issueNumber, body)` — post a comment.
-   - `updateProjectItemStatus(itemId, status)` — move project item to a named column.
+2. **`src/lib/github.ts`** — GitHub App auth via `@octokit/auth-app` or `@octokit/rest`, plus helpers:
+   - `getInstallationOctokit()` — authenticate as GitHub App.
+   - `listFeedbackItems()` — fetch open issues from `GITHUB_REPO` with label `feedback`, parse labels into `category` and status from project.
+   - `getProjectItems()` — fetch project items via GraphQL and map issue number to status.
+   - `createFeedbackIssue(input)` — create issue with labels `feedback`, `category:<category>`, body containing author info; add to project under `New`.
+   - `getFeedbackIssue(number)` — fetch single issue.
+   - `addIssueComment(number, body)`.
+   - `moveProjectItemToStatus(itemId, statusName)`.
 
-3. **API routes**
-   - `POST /api/feedback` — accept `{ title, description, category, author }`, call `createIssue`, return `{ issueNumber, url }`.
-   - `GET /api/feedback` — return list of issues (server-side caching optional, 60s).
-   - `GET /api/feedback/[id]` — return single issue.
-   - `POST /api/feedback/[id]/vote` — placeholder, increments a counter stored in issue reactions for now.
+3. **`src/lib/data.ts`** — data access layer:
+   - `getFeedbackItems(): Promise<FeedbackItem[]>` — calls `listFeedbackItems()` and `getProjectItems()`, merges status.
+   - `getFeedbackItem(id: string): Promise<FeedbackItem | null>`.
+   - `createFeedbackItem(input): Promise<FeedbackItem>`.
 
-4. **Wire up pages**
-   - `/board` — fetch via `GET /api/feedback` and render `FeedbackCard` list.
-   - `/roadmap` — fetch via `GET /api/feedback`, group by `status` into columns.
-   - `/feedback` form — `POST /api/feedback` on submit, redirect to `/feedback/[id]`.
+4. **API routes**
+   - `GET /api/feedback` — return `getFeedbackItems()`.
+   - `GET /api/feedback/[id]` — return `getFeedbackItem(id)`.
+   - `POST /api/feedback` — accept `{ title, description, category, author }`, validate, call `createFeedbackItem`, return the new item.
+   - `POST /api/feedback/[id]/vote` — placeholder: add a 👍 reaction to the issue and return new count (re-fetch).
 
 5. **Labels convention**
    - Categories: `category:feature`, `category:bug`, `category:improvement`
-   - Statuses: project column name is source of truth; fallback label `status:<name>`.
+   - Status source of truth: GitHub Project column name.
 
 ## Acceptance
 
 - `pnpm run build` passes.
-- A test issue created via the form appears in the GitHub repo and project.
-- `/board` lists it; `/roadmap` places it in the correct column.
+- `npx tsc --noEmit` passes.
+- `GET /api/feedback` returns issues from the configured repo (requires env vars + GitHub App).
+- `POST /api/feedback` creates an issue and adds it to the project.
