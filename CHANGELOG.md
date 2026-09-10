@@ -7,6 +7,8 @@
 - Design tokens matching Nuri's clean public-web style (light mode only).
 - Root layout with header (logo, Roadmap, Give Feedback nav) and footer.
 - Public pages: `/` landing hero, `/board`, `/roadmap`, `/feedback`, `/feedback/[id]`.
+- Reusable feedback cards, category/status badges, vote buttons, roadmap columns, and submission form.
+- Mobile-first navigation, 17px base typography, keyboard focus states, and sample-data notices.
 - `src/lib/env.ts` with zod validation for required environment variables.
 - CI workflow running install, lint, and build on PR/push.
 - GitHub-backed feedback list, detail, create and vote API routes; project Status values joined by repository and issue number.

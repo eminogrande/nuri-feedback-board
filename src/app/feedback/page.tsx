@@ -1,68 +1,25 @@
-export default function FeedbackPage() {
+import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { isCategory } from "@/components/CategoryBadge";
+import { SubmitForm } from "@/components/SubmitForm";
+import { Card } from "@/components/ui/card";
+
+export const metadata: Metadata = { title: "Give feedback" };
+
+export default async function FeedbackPage({ searchParams }: {
+  searchParams: Promise<{ category?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const category = typeof params.category === "string" && isCategory(params.category) ? params.category : "feature";
+
   return (
-    <div className="container mx-auto px-4 py-16">
-      <div className="mx-auto max-w-2xl">
-        <h1 className="text-3xl font-bold text-foreground">Give Feedback</h1>
-        <p className="mt-4 text-muted">
-          Help us improve Nuri by sharing your thoughts and suggestions.
-        </p>
-        <form className="mt-8 space-y-6">
-          <div>
-            <label
-              htmlFor="title"
-              className="block text-sm font-medium text-foreground"
-            >
-              Title
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-foreground placeholder-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-              placeholder="Brief summary of your feedback"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="category"
-              className="block text-sm font-medium text-foreground"
-            >
-              Category
-            </label>
-            <select
-              id="category"
-              name="category"
-              className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option>Feature Request</option>
-              <option>Bug Report</option>
-              <option>Improvement</option>
-              <option>Other</option>
-            </select>
-          </div>
-          <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-foreground"
-            >
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              rows={4}
-              className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-foreground placeholder-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-              placeholder="Tell us more about your feedback..."
-            />
-          </div>
-          <button
-            type="submit"
-            className="rounded-lg bg-accent px-6 py-2 text-sm font-semibold text-accent-foreground hover:opacity-90 transition-opacity"
-          >
-            Submit Feedback
-          </button>
-        </form>
-      </div>
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+      <Link href="/board" className="inline-flex min-h-12 items-center gap-2 rounded-md text-base text-slate-600 hover:text-violet-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-700"><ArrowLeft aria-hidden="true" className="size-4" />Back to the board</Link>
+      <h1 className="mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">Give feedback</h1>
+      <p className="mt-4 text-lg leading-relaxed text-slate-600">What would make Nuri work better for you? We&apos;re listening.</p>
+      <p className="mt-4 leading-relaxed text-slate-600">Before you start, <Link href="/board" className="rounded-sm text-violet-800 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-700">check the board</Link> to see if someone has shared a similar idea.</p>
+      <Card className="mt-8 p-5 sm:p-8"><SubmitForm key={category} initialCategory={category} /></Card>
     </div>
   );
 }
