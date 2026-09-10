@@ -1,7 +1,7 @@
 # Task Packet 05 — Arkade payout GitHub Action
 
 - Repo: `eminogrande/nuri-feedback-board` (local: `~/Developer/nuri-feedback-board`)
-- Base branch: `main`   Base SHA: `b848ec2`
+- Base branch: `main`   Base SHA: `abaa470`
 - Target branch: `hermes-subagent/payout-action`
 - Allowed paths: `.github/workflows/payout.yml`, `scripts/payout.ts`, `src/lib/arkade.ts`, `src/lib/payout.ts`, `CHANGELOG.md`
 - Protected: `package.json` version, `docs/**/*.md`, `src/lib/env.ts`, CI workflow (ci.yml), `src/app/**/*`, `src/components/**/*`

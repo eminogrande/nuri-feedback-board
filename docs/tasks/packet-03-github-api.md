@@ -1,7 +1,7 @@
 # Task Packet 03 — GitHub Issues/Projects API integration
 
 - Repo: `eminogrande/nuri-feedback-board` (local: `~/Developer/nuri-feedback-board`)
-- Base branch: `main`   Base SHA: `b848ec2`
+- Base branch: `main`   Base SHA: `abaa470`
 - Target branch: `hermes-subagent/github-api`
 - Allowed paths: `src/lib/types.ts`, `src/lib/github.ts`, `src/lib/data.ts`, `src/app/api/**/*`, `CHANGELOG.md`
 - Protected: `package.json` version, `docs/**/*.md`, `src/lib/env.ts`, CI workflow, `.github/workflows/*`, `src/app/**/*`, `src/components/**/*` (except `src/lib/data.ts`)

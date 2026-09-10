@@ -1,7 +1,7 @@
 # Task Packet 04 — Nuri passkey authentication
 
 - Repo: `eminogrande/nuri-feedback-board` (local: `~/Developer/nuri-feedback-board`)
-- Base branch: `main`   Base SHA: `b848ec2`
+- Base branch: `main`   Base SHA: `abaa470`
 - Target branch: `hermes-subagent/passkey-auth`
 - Allowed paths: `src/lib/auth.ts`, `src/lib/passkey.ts`, `src/app/api/auth/**/*`, `src/components/auth.tsx`, `src/app/login/**/*`, `src/middleware.ts`, `CHANGELOG.md`
 - Protected: `package.json` version, `docs/**/*.md`, CI workflow, `.github/workflows/*`, `src/app/page.tsx`, `src/app/board/page.tsx`, `src/app/roadmap/page.tsx`, `src/app/feedback/page.tsx`, `src/app/feedback/[id]/page.tsx`

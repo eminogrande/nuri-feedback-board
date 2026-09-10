@@ -1,7 +1,7 @@
 # Task Packet 02 — Public UI pages and components
 
 - Repo: `eminogrande/nuri-feedback-board` (local: `~/Developer/nuri-feedback-board`)
-- Base branch: `main`   Base SHA: `b848ec2`
+- Base branch: `main`   Base SHA: `abaa470`
 - Target branch: `hermes-subagent/ui-pages`
 - Allowed paths: `src/app/**/*`, `src/components/**/*`, `src/lib/utils.ts`, `public/**/*`, `CHANGELOG.md`
 - Protected: `package.json` version, `docs/**/*.md`, `src/lib/env.ts`, CI workflow, `.github/workflows/*`
