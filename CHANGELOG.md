@@ -1,6 +1,33 @@
 # Changelog
 
-## Unreleased
+## 2026-10-14 — [RELEASE] v0.1.0 — hermes-agent for emino
+
+First tagged release. State of `main` at HEAD `00524d4b`.
+
+- Public board, roadmap, list and detail pages read live GitHub Issues and Project v2 status.
+- Passkey sign-in (`/api/auth/*`, `/api/me`), signed HTTP-only `nuri_session` cookie; POST `/api/feedback/*` requires session and trusted origin.
+- Feedback create and vote API backed by a GitHub App (issues, +1 reactions, project `New` assignment).
+- Testnet-only Arkade payouts via `payout.yml` (schedule every 5 min or manual dispatch), opt-in via `PAYOUT_ENABLED`.
+- Deployment scaffolding for `feedback.nuri.com`: Vercel or `scripts/deploy.sh` with PM2 and nginx. Live deployment state UNVERIFIED.
+- Known limits (from the entries below): GitHub reactions are not per-person votes; real sign-in needs an operator-provisioned passkey registry.
+
+## Commit history
+
+### 2026-09-10
+- `00524d4b` docs: deployment scaffolding (`scripts/deploy.sh`, PM2 `ecosystem.config.js`, nginx vhost), `.env.example`, README deployment section.
+- `cc1941e5` feat(ui): board, roadmap, detail and submit form now use the live feedback and `/api/me` APIs (#7).
+- `a1b4dc8d` docs: added task packet 06 (wire UI).
+- `fbc95614` Integration (#6): GitHub Issues/Projects API, passkey auth with middleware, Arkade payout script and workflow merged into main.
+- `ffe8d0b6` docs: task packets point at base SHA `abaa470`.
+- `abaa470b` chore: `worktrees/` ignored by git.
+- `5d6fcdc3` docs: task packets updated for parallel wave 2.
+- `b848ec21` feat: Next.js 15 project bootstrapped with design system and CI workflow (#1).
+
+### 2026-09-09
+- `c9a34590` docs: task packets for bootstrap, UI, GitHub API, passkey auth, payout.
+- `bc5e938f` docs: initial README, architecture doc and MIT license (first commit).
+
+## Unreleased (pre-v0.1.0 notes, now included in v0.1.0)
 
 ### Changed
 - Connected the public board, roadmap, and detail pages to uncached feedback API reads, with loading, error, empty, and missing-item states. All seven GitHub project statuses retain their original names.
